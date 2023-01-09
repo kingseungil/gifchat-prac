@@ -1,24 +1,25 @@
 const SocketIO = require('socket.io');
 
-module.exports = (server) => {
+module.exports = (server, app) => {
     const io = SocketIO(server, { path: '/socket.io' });
+    app.set('io', io);
+    // 네임스페이스 장착
+    const room = io.of('/room');
+    const chat = io.of('/chat');
 
-    io.on('connection', (socket) => {
-        const req = socket.request;
-        const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-        console.log('새로운 클라이언트 접속', ip, socket.id, req.ip);
+    room.on('connection', (socket) => {
+        console.log('room 네임스페이스 접속');
         socket.on('disconnect', () => {
-            console.log('클라이언트 접속 해제', ip, socket.id, req.ip);
-            clearInterval(socket.interval); // 접속 끊어지면 Interval도 더 이상 안되도록 설정
+            console.log('room 네임스페이스 접속 해제');
         });
-        socket.on('reply', (data) => {
-            console.log(data);
+    });
+    chat.on('connection', (socket) => {
+        console.log('chat 네임스페이스 접속');
+        socket.on('join', (data) => {
+            socket.join(data); // 방에 참가
         });
-
-        socket.on('error', console.error);
-        /** 서버에서 2초마다 메시지 보내줌 */
-        socket.interval = setInterval(() => {
-            socket.emit('news', 'Hello Socket.IO');
-        }, 2000);
+        socket.on('disconnect', () => {
+            console.log('chat 네임스페이스 접속 해제');
+        });
     });
 };

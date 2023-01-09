@@ -5,10 +5,10 @@ const connect = () => {
         mongoose.set('debug', true);
     }
     mongoose.connect(
-        `mongodb://${process.env.MONGO_ID}:${process.env.MONGO_PASSWORD}@localhost:27017/zerocho`,
+        `mongodb://127.0.0.1/admin`,
         {
-            dbName: 'socket.io',
-            useNewUrlParser: true,
+            dbName: 'socket_chat',
+            // useNewUrlParser: true,
         },
         (error) => {
             if (error) {
@@ -21,7 +21,7 @@ const connect = () => {
 };
 
 mongoose.connection.on('error', (error) => {
-    console.error('몽고디비 연결이 끊겼습니다. 연결을 재시도합니다');
+    console.error('몽고디비 연결이 끊겼습니다. 연결을 재시도합니다', error);
     connect();
 });
 
