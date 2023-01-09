@@ -52,9 +52,11 @@ exports.enterRoom = async (req, res, next) => {
         if (room.max <= rooms.get(req.params.id)?.size) {
             return res.redirect('/?error=허용 인원 초과!');
         }
+        const chats = await Chat.find({ room: room._id }).sort('createdAt');
         res.render('chat', {
             title: '채팅방 생성',
-            chats: [],
+            chats,
+            room,
             user: req.session.color,
         });
     } catch (error) {
@@ -66,6 +68,21 @@ exports.removeRoom = async (req, res, next) => {
     try {
         await removeRoomService(req.params.id);
         res.send('삭제완료');
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
+
+exports.sendChat = async (req, res, next) => {
+    try {
+        const chat = await Chat.create({
+            room: req.params.id,
+            user: req.session.color,
+            chat: req.body.chat,
+        });
+        req.app.get('io').of('/chat').to(req.params.id).emit('chat', chat);
+        res.send('채팅 전송');
     } catch (error) {
         console.error(error);
         next(error);
