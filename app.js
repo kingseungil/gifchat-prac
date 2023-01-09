@@ -7,7 +7,7 @@ const nunjucks = require('nunjucks');
 const dotenv = require('dotenv');
 dotenv.config();
 
-const webSocket = requrie('./socket');
+const webSocket = require('./socket');
 const indexRouter = require('./routes');
 const app = express();
 app.set('port', process.env.PORT || 8005);
