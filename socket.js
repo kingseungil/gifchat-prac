@@ -1,24 +1,24 @@
-const WebSocket = require('ws');
+const SocketIO = require('socket.io');
 
 module.exports = (server) => {
-    const wss = new WebSocket.Server({ server });
+    const io = SocketIO(server, { path: '/socket.io' });
 
-    wss.on('connection', (ws, req) => {
+    io.on('connection', (socket) => {
+        const req = socket.request;
         const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-        console.log('새로운 클라이언트 접속', ip);
-        ws.on('message', (message) => {
-            console.log(message.toString()); // buffer -> string
+        console.log('새로운 클라이언트 접속', ip, socket.id, req.ip);
+        socket.on('disconnect', () => {
+            console.log('클라이언트 접속 해제', ip, socket.id, req.ip);
+            clearInterval(socket.interval); // 접속 끊어지면 Interval도 더 이상 안되도록 설정
         });
-        ws.on('error', console.error);
-        ws.on('close', () => {
-            console.log('클라이언트 접속 해제', ip);
-            clearInterval(ws.interval); // 접속 끊어지면 Interval도 더 이상 안되도록 설정
+        socket.on('reply', (data) => {
+            console.log(data);
         });
+
+        socket.on('error', console.error);
         /** 서버에서 2초마다 메시지 보내줌 */
-        ws.interval = setInterval(() => {
-            if (ws.readyState === ws.OPEN) {
-                ws.send('서버에서 클라이언트로 메시지를 보냅니다');
-            }
+        socket.interval = setInterval(() => {
+            socket.emit('news', 'Hello Socket.IO');
         }, 2000);
     });
 };
